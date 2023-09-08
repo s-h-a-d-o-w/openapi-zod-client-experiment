@@ -207,10 +207,10 @@ const endpoints = makeApi([
       {
         name: "body",
         type: "Body",
-        // schema: z.instanceof(File),
-        schema: z.custom<File | Buffer>((data) => {
-          return typeof window === 'undefined' ? data instanceof Buffer : data instanceof File
-        }, 'Data is not an instance of a Buffer or File'),
+        schema: z.instanceof(File),
+        // schema: z.custom<File | Buffer>((data) => {
+        //   return typeof window === 'undefined' ? data instanceof Buffer : data instanceof File
+        // }, 'Data is not an instance of a Buffer or File'),
       },
       {
         name: "petId",
