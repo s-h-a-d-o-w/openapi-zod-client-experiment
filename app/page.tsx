@@ -1,13 +1,69 @@
 import Image from 'next/image'
 import styles from './page.module.css'
+import { createApiClient, schemas } from '@/services/petstore-default'
+import axios from 'axios'
+import { ZodError, z } from 'zod'
+import { UploadButton } from './UploadButton'
 
-export default function Home() {
+const petstoreClient = createApiClient("http://localhost:8080/api/v3")
+
+async function getData() {
+  try {
+    const schema = z.custom<File | Buffer>((data) => {
+      return typeof window === 'undefined' ? data instanceof Buffer : data instanceof File
+    }, 'Data is not an instance of a Buffer or File')
+
+    const image = await fetch(
+      'https://upload.wikimedia.org/wikipedia/commons/5/50/Adobe_Illustrator_icon.png'
+    )
+    const blob = await image.blob()
+    const arrayBuffer = await blob.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+
+    schema.parse(buffer) as Buffer
+    // schema.parse({}) // Fails
+
+    // await petstoreClient.uploadFile(buffer, {
+    //   params: {
+    //     petId: 1
+    //   }
+    // })
+
+    // const image = await fetch(
+    //   'https://upload.wikimedia.org/wikipedia/commons/5/50/Adobe_Illustrator_icon.png'
+    // )
+    // return await petstoreClient.uploadFile(new File([await image.blob()], 'asdf'), {
+    //   params: {
+    //     petId: 3
+    //   }
+    // })
+
+    return await petstoreClient.getPetById({ params: { petId: 1 } })
+  } catch (error) {
+    if (error instanceof ZodError) {
+      console.error(error.stack)
+    } else if (axios.isAxiosError(error)) {
+      console.error(error.message + ": " + error.response?.data)
+    }
+
+    throw error
+  }
+}
+
+// Shared state somewhere
+type State = {
+  data: Array<z.infer<typeof schemas.Pet>>
+}
+
+export default async function Home() {
+  const data = await getData()
+
   return (
     <main className={styles.main}>
       <div className={styles.description}>
+        <UploadButton />
         <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.tsx</code>
+          ad{JSON.stringify(data, null, 2)}
         </p>
         <div>
           <a

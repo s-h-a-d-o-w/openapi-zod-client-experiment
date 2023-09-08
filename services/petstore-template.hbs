@@ -1,0 +1,38 @@
+import { z } from 'zod'
+
+{{#each schemas}}
+const {{@key}} = {{{this}}}
+{{/each}}
+
+export const petstoreParams = {
+{{#each endpoints}}
+  '{{method}} {{path}}': {
+    {{#each parameters}}
+      {{name}}: {{{schema}}},
+    {{/each}}
+  },
+{{/each}}
+}
+
+export type PetstoreParams = {
+{{#each endpoints}}
+  '{{method}} {{path}}': {
+    {{#each parameters}}
+      {{name}}: z.infer<(typeof petstoreParams)["{{../method}} {{../path}}"]["{{name}}"]>,
+    {{/each}}
+  },
+{{/each}}
+}
+
+// See https://github.com/colinhacks/zod#type-inference
+export type Petstore = {
+{{#each schemas}}
+  {{@key}}: z.infer<typeof {{@key}}>
+{{/each}}
+}
+
+export const petstore = {
+{{#each schemas}}
+  {{@key}},
+{{/each}}
+}
